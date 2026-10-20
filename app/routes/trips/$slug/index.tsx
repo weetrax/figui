@@ -5,6 +5,7 @@ import { ItineraryTimeline } from '@/components/features/itinerary-timeline'
 import { TravelersCard } from '@/components/features/travelers-card'
 import { TripHero } from '@/components/features/trip-hero'
 import { TripOverview } from '@/components/features/trip-overview'
+import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { getTripBySlug } from '@/lib/api/trips'
@@ -31,7 +32,7 @@ function TripDetailPage() {
   const organizer = isOrganizer(trip, user)
 
   return (
-    <div className="space-y-6">
+    <Container className="space-y-6 pt-8">
       <Link
         to="/"
         className="inline-flex items-center gap-2 text-sm font-medium hover:text-primary"
@@ -48,7 +49,7 @@ function TripDetailPage() {
               <Button
                 asChild
                 variant="outline"
-                className="rounded-lg border-white/60 bg-white text-foreground hover:bg-white/90"
+                className="rounded-lg border-white/60 bg-white text-zinc-900 hover:bg-white/90 dark:border-white/60 dark:bg-white dark:text-zinc-900 dark:hover:bg-white/90"
               >
                 <Link to="/trips/$slug/edit" params={{ slug: trip.slug }}>
                   <Pencil />
@@ -82,6 +83,6 @@ function TripDetailPage() {
           <TravelersCard trip={trip} user={user} />
         </aside>
       </div>
-    </div>
+    </Container>
   )
 }

@@ -7,6 +7,7 @@ import {
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { TripForm } from '@/components/features/trip-form'
+import { Container } from '@/components/layout/container'
 import { getTripBySlug, updateTrip } from '@/lib/api/trips'
 import { isOrganizer } from '@/lib/permissions'
 import type { TripInput } from '@/types'
@@ -43,7 +44,7 @@ function EditTripPage() {
     isDateFlexible: trip.isDateFlexible,
     isPublic: trip.isPublic,
     tags: trip.tags,
-    country: trip.country,
+    countries: trip.countries,
     estimatedBudget: trip.estimatedBudget,
     maxTravelers: trip.maxTravelers,
   }
@@ -64,7 +65,7 @@ function EditTripPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <Container className="space-y-6 pt-8">
       <Link
         to="/trips/$slug"
         params={{ slug: trip.slug }}
@@ -82,6 +83,6 @@ function EditTripPage() {
           router.navigate({ to: '/trips/$slug', params: { slug: trip.slug } })
         }
       />
-    </div>
+    </Container>
   )
 }

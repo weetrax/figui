@@ -1,5 +1,6 @@
 import { Globe, Loader2, Lock } from 'lucide-react'
 import { useState } from 'react'
+import { CountryMultiSelect } from '@/components/features/country-multi-select'
 import { CoverImage } from '@/components/features/cover-image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -37,7 +38,7 @@ const EMPTY: FormState = {
   isDateFlexible: false,
   isPublic: true,
   tags: [],
-  country: '',
+  countries: [],
   estimatedBudget: '',
   maxTravelers: '4',
 }
@@ -64,7 +65,15 @@ export const TripForm: React.FC<TripFormProps> = ({
   const set = <TKey extends keyof FormState>(
     key: TKey,
     value: FormState[TKey],
-  ) => setForm((prev) => ({ ...prev, [key]: value }))
+  ) => {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    // L'erreur d'un champ disparaît dès qu'il est modifié.
+    setErrors((prev) => {
+      if (!(key in prev)) return prev
+      const { [key]: _removed, ...rest } = prev
+      return rest
+    })
+  }
 
   const toggleTag = (tag: string) =>
     set(
@@ -113,13 +122,12 @@ export const TripForm: React.FC<TripFormProps> = ({
             />
           </Field>
 
-          <Field label="Pays" htmlFor="country" error={errors.country}>
-            <Input
-              id="country"
-              placeholder="Ex : Philippines"
-              value={form.country}
-              onChange={(e) => set('country', e.target.value)}
-              aria-invalid={!!errors.country}
+          <Field label="Pays" htmlFor="countries" error={errors.countries}>
+            <CountryMultiSelect
+              id="countries"
+              value={form.countries}
+              onChange={(codes) => set('countries', codes)}
+              invalid={!!errors.countries}
             />
           </Field>
 

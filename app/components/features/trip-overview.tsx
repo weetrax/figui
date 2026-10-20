@@ -1,8 +1,9 @@
-import { CalendarDays, Flag, MapPin, Wallet } from 'lucide-react'
+import { CalendarDays, Flag, Wallet } from 'lucide-react'
 import { TripTagBadge } from '@/components/features/trip-badges'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { countryFlag, countryName } from '@/lib/countries'
 import {
   countDays,
   formatCurrency,
@@ -54,10 +55,12 @@ export const TripOverview: React.FC<TripOverviewProps> = ({ trip }) => {
 
       <StatCard icon={Flag} label="Pays">
         <div className="flex flex-wrap gap-1.5">
-          <Badge variant="outline" className="bg-card">
-            <MapPin />
-            {trip.country}
-          </Badge>
+          {trip.countries.map((code) => (
+            <Badge key={code} variant="outline" className="bg-card">
+              <span aria-hidden>{countryFlag(code)}</span>
+              {countryName(code)}
+            </Badge>
+          ))}
           {trip.tags.map((tag) => (
             <TripTagBadge key={tag} tag={tag} />
           ))}

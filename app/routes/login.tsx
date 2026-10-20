@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { Logo } from '@/components/features/site-header'
+import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -61,7 +62,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md py-8">
+    <Container className="max-w-md pt-16">
       <Card className="rounded-2xl">
         <CardHeader className="items-center gap-4 text-center">
           <div className="flex justify-center">
@@ -143,6 +144,6 @@ function LoginPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </Container>
   )
 }

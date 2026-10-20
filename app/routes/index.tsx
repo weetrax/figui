@@ -1,9 +1,11 @@
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Compass, Plus, Search, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Check, Search, X } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { HomeHero } from '@/components/features/home-hero'
 import { TripCard } from '@/components/features/trip-card'
-import { Button } from '@/components/ui/button'
+import { Container } from '@/components/layout/container'
 import { Input } from '@/components/ui/input'
+import { listDestinations } from '@/lib/api/destinations'
 import {
   listMyTrips,
   listPublicTrips,
@@ -11,97 +13,79 @@ import {
 } from '@/lib/api/trips'
 import { TRIP_TAGS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-import type { Trip } from '@/types'
+import type { Destination, Trip } from '@/types'
 
 export const Route = createFileRoute('/')({
   validateSearch: tripFiltersSchema,
-  loaderDeps: ({ search }) => ({ q: search.q, tag: search.tag }),
+  loaderDeps: ({ search }) => ({ q: search.q, tags: search.tags }),
   loader: async ({ deps, context }) => {
-    const [trips, myTrips] = await Promise.all([
+    const [trips, myTrips, destinations] = await Promise.all([
       listPublicTrips({ data: deps }),
       context.user ? listMyTrips() : Promise.resolve<Array<Trip>>([]),
+      listDestinations(),
     ])
-    return { trips, myTrips }
+    return { trips, myTrips, destinations }
   },
   component: HomePage,
 })
 
 function HomePage() {
-  const { trips, myTrips } = Route.useLoaderData()
+  const { trips, myTrips, destinations } = Route.useLoaderData()
   const { user } = Route.useRouteContext()
   const search = Route.useSearch()
+  const navigate = useNavigate({ from: '/' })
+
+  // Stable pour ne pas réinitialiser l'animation du globe à chaque rendu.
+  const showDestination = useCallback(
+    (destination: Destination) =>
+      void navigate({
+        search: { q: destination.name },
+        hash: 'explorer',
+      }),
+    [navigate],
+  )
 
   return (
-    <div className="space-y-14">
-      <Hero />
+    <>
+      <HomeHero destinations={destinations} onSelect={showDestination} />
 
-      {user && (
-        <section id="mes-voyages" className="scroll-mt-24 space-y-5">
-          <SectionHeading kicker={`Bonjour ${user.name}`} title="Mes voyages" />
-          {myTrips.length > 0 ? (
-            <TripGrid trips={myTrips} />
+      <Container className="space-y-14 pt-14">
+        {user && (
+          <section id="mes-voyages" className="scroll-mt-24 space-y-5">
+            <SectionHeading
+              kicker={`Bonjour ${user.name}`}
+              title="Mes voyages"
+            />
+            {myTrips.length > 0 ? (
+              <TripGrid trips={myTrips} />
+            ) : (
+              <EmptyState
+                title="Aucun voyage pour l’instant"
+                text="Créez votre premier itinéraire ou rejoignez une aventure ci-dessous."
+              />
+            )}
+          </section>
+        )}
+
+        <section id="explorer" className="scroll-mt-24 space-y-5">
+          <SectionHeading
+            kicker="Explorer"
+            title="Voyages ouverts aux compagnons"
+          />
+          <Filters q={search.q} tags={search.tags ?? []} />
+          {trips.length > 0 ? (
+            <TripGrid trips={trips} />
           ) : (
             <EmptyState
-              title="Aucun voyage pour l’instant"
-              text="Créez votre premier itinéraire ou rejoignez une aventure ci-dessous."
+              title="Aucun voyage ne correspond"
+              text="Essayez une autre destination ou retirez les filtres."
             />
           )}
         </section>
-      )}
-
-      <section id="explorer" className="scroll-mt-24 space-y-5">
-        <SectionHeading
-          kicker="Explorer"
-          title="Voyages ouverts aux compagnons"
-        />
-        <Filters q={search.q} tag={search.tag} />
-        {trips.length > 0 ? (
-          <TripGrid trips={trips} />
-        ) : (
-          <EmptyState
-            title="Aucun voyage ne correspond"
-            text="Essayez une autre destination ou retirez les filtres."
-          />
-        )}
-      </section>
-    </div>
+      </Container>
+    </>
   )
 }
-
-const Hero: React.FC = () => (
-  <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-orange-100 via-rose-50 to-sky-100 px-6 py-14 sm:px-12 sm:py-20 dark:from-orange-950 dark:via-rose-950 dark:to-sky-950">
-    <div className="relative z-10 max-w-2xl space-y-5">
-      <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
-        Voyager ensemble
-      </p>
-      <h1 className="text-4xl leading-tight font-extrabold tracking-tight sm:text-5xl">
-        Trouvez vos compagnons de route, construisez l’itinéraire ensemble.
-      </h1>
-      <p className="text-lg text-muted-foreground">
-        Publiez votre projet de voyage, invitez des voyageurs qui partagent vos
-        envies et planifiez chaque étape au même endroit.
-      </p>
-      <div className="flex flex-wrap gap-3">
-        <Button asChild size="lg" className="rounded-full">
-          <Link to="/trips/new">
-            <Plus />
-            Créer un voyage
-          </Link>
-        </Button>
-        <Button asChild size="lg" variant="outline" className="rounded-full">
-          <a href="#explorer">
-            <Compass />
-            Explorer les voyages
-          </a>
-        </Button>
-      </div>
-    </div>
-    <Compass
-      aria-hidden
-      className="absolute -right-10 -bottom-16 size-72 text-primary/10 sm:size-96"
-    />
-  </section>
-)
 
 const SectionHeading: React.FC<{ kicker: string; title: string }> = ({
   kicker,
@@ -133,23 +117,38 @@ const EmptyState: React.FC<{ title: string; text: string }> = ({
   </div>
 )
 
-const Filters: React.FC<{ q?: string; tag?: string }> = ({ q, tag }) => {
+interface FiltersProps {
+  q?: string
+  tags: Array<string>
+}
+
+const Filters: React.FC<FiltersProps> = ({ q, tags }) => {
   const navigate = useNavigate({ from: '/' })
   const [query, setQuery] = useState(q ?? '')
 
   useEffect(() => setQuery(q ?? ''), [q])
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault()
+  const setSearch = (next: { q?: string; tags?: Array<string> }) =>
     void navigate({
-      search: (prev) => ({ ...prev, q: query.trim() || undefined }),
+      search: (prev) => ({ ...prev, ...next }),
       resetScroll: false,
     })
+
+  const toggleTag = (tag: string) => {
+    const next = tags.includes(tag)
+      ? tags.filter((t) => t !== tag)
+      : [...tags, tag]
+    setSearch({ tags: next.length ? next : undefined })
+  }
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault()
+    setSearch({ q: query.trim() || undefined })
   }
 
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <form onSubmit={handleSubmit} className="relative w-full lg:max-w-sm">
+    <div className="space-y-3">
+      <form onSubmit={handleSubmit} className="relative w-full sm:max-w-md">
         <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={query}
@@ -164,10 +163,7 @@ const Filters: React.FC<{ q?: string; tag?: string }> = ({ q, tag }) => {
             aria-label="Effacer la recherche"
             onClick={() => {
               setQuery('')
-              void navigate({
-                search: (prev) => ({ ...prev, q: undefined }),
-                resetScroll: false,
-              })
+              setSearch({ q: undefined })
             }}
             className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
@@ -176,32 +172,48 @@ const Filters: React.FC<{ q?: string; tag?: string }> = ({ q, tag }) => {
         )}
       </form>
 
-      <div className="flex flex-wrap gap-2">
-        <TagChip label="Tous" active={!tag} />
-        {TRIP_TAGS.map((t) => (
-          <TagChip key={t} label={t} value={t} active={tag === t} />
+      <div
+        role="group"
+        aria-label="Filtrer par style de voyage"
+        className="flex flex-wrap gap-2"
+      >
+        <TagChip
+          label="Tous"
+          active={tags.length === 0}
+          onClick={() => setSearch({ tags: undefined })}
+        />
+        {TRIP_TAGS.map((tag) => (
+          <TagChip
+            key={tag}
+            label={tag}
+            active={tags.includes(tag)}
+            onClick={() => toggleTag(tag)}
+          />
         ))}
       </div>
     </div>
   )
 }
 
-const TagChip: React.FC<{ label: string; value?: string; active: boolean }> = ({
-  label,
-  value,
-  active,
-}) => (
-  <Link
-    from="/"
-    search={(prev) => ({ ...prev, tag: value })}
-    resetScroll={false}
+interface TagChipProps {
+  label: string
+  active: boolean
+  onClick: () => void
+}
+
+const TagChip: React.FC<TagChipProps> = ({ label, active, onClick }) => (
+  <button
+    type="button"
+    aria-pressed={active}
+    onClick={onClick}
     className={cn(
-      'rounded-full border px-3 py-1.5 text-sm font-medium transition',
+      'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition',
       active
         ? 'border-primary bg-primary text-primary-foreground'
         : 'bg-card hover:bg-accent',
     )}
   >
+    {active && label !== 'Tous' && <Check className="size-3.5" />}
     {label}
-  </Link>
+  </button>
 )

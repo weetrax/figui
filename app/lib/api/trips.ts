@@ -2,6 +2,7 @@ import { notFound } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { DEFAULT_COVER_IMAGE } from '@/lib/constants'
+import { countryName } from '@/lib/countries'
 import { slugify } from '@/lib/format'
 import { stepInputSchema, tripInputSchema } from '@/lib/schemas'
 import { getCurrentUser, requireUser } from '@/server/auth'
@@ -21,7 +22,8 @@ const idSchema = z.object({ id: z.string().min(1) })
 
 export const tripFiltersSchema = z.object({
   q: z.string().optional(),
-  tag: z.string().optional(),
+  /** Un voyage correspond s'il porte au moins un des tags (OU). */
+  tags: z.array(z.string()).optional(),
 })
 
 export type TripFilters = z.infer<typeof tripFiltersSchema>
@@ -43,12 +45,16 @@ export const listPublicTrips = createServerFn({ method: 'GET' })
     const query = data.q ? normalize(data.q.trim()) : ''
     return db.trips
       .filter((trip) => trip.isPublic)
-      .filter((trip) => !data.tag || trip.tags.includes(data.tag))
+      .filter(
+        (trip) =>
+          !data.tags?.length ||
+          trip.tags.some((tag) => data.tags?.includes(tag)),
+      )
       .filter(
         (trip) =>
           !query ||
           normalize(
-            `${trip.title} ${trip.country} ${trip.description}`,
+            `${trip.title} ${trip.countries.map(countryName).join(' ')} ${trip.description}`,
           ).includes(query),
       )
       .map(toTrip)
@@ -98,6 +104,7 @@ export const createTrip = createServerFn({ method: 'POST' })
       slug: uniqueSlug(slugify(data.title)),
       coverImageUrl: data.coverImageUrl || DEFAULT_COVER_IMAGE,
       tags: [...new Set(data.tags)],
+      countries: [...new Set(data.countries)],
       organizerId: user.id,
       participantIds: [],
       createdAt: new Date().toISOString(),
@@ -121,6 +128,7 @@ export const updateTrip = createServerFn({ method: 'POST' })
       ...data,
       coverImageUrl: data.coverImageUrl || DEFAULT_COVER_IMAGE,
       tags: [...new Set(data.tags)],
+      countries: [...new Set(data.countries)],
       slug: uniqueSlug(slugify(data.title), trip.id),
     })
     return toTrip(trip)

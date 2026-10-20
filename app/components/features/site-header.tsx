@@ -1,7 +1,9 @@
 import { Link, useRouter } from '@tanstack/react-router'
 import { LogIn, LogOut, Map, Plane, Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { ThemeToggle } from '@/components/features/theme-toggle'
 import { UserAvatar } from '@/components/features/user-avatar'
+import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -39,9 +41,10 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ user }) => {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+      <Container className="flex h-16 items-center justify-between gap-4">
         <Logo />
         <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           <Button asChild className="rounded-full shadow-sm shadow-primary/30">
             <Link to="/trips/new">
               <Plus />
@@ -85,7 +88,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ user }) => {
             </Button>
           )}
         </div>
-      </div>
+      </Container>
     </header>
   )
 }

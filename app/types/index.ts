@@ -23,7 +23,8 @@ export interface Trip {
   isDateFlexible: boolean
   isPublic: boolean
   tags: Array<string>
-  country: string
+  /** Codes ISO 3166-1 alpha-2 des pays visités (ex. `["PH"]`). */
+  countries: Array<string>
   estimatedBudget: number
   maxTravelers: number
   organizer: PublicUser
@@ -58,9 +59,18 @@ export type TripInput = Pick<
   | 'isDateFlexible'
   | 'isPublic'
   | 'tags'
-  | 'country'
+  | 'countries'
   | 'estimatedBudget'
   | 'maxTravelers'
 >
 
 export type ItineraryStepInput = Omit<ItineraryStep, 'id' | 'tripId'>
+
+export interface Destination {
+  /** Code ISO 3166-1 alpha-2. */
+  code: string
+  /** Code ISO numérique, identifiant du pays dans les géométries du globe. */
+  numericCode?: string
+  name: string
+  tripCount: number
+}

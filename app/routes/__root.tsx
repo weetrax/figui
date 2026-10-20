@@ -2,6 +2,7 @@ import {
   HeadContent,
   Link,
   Outlet,
+  ScriptOnce,
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
@@ -9,6 +10,11 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { Compass } from 'lucide-react'
 import { SiteHeader } from '@/components/features/site-header'
+import {
+  THEME_SCRIPT,
+  ThemeProvider,
+} from '@/components/features/theme-provider'
+import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -41,13 +47,17 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
+    // `suppressHydrationWarning` : la classe du thème est posée avant React.
+    <html lang="fr" suppressHydrationWarning>
       <head>
+        <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <HeadContent />
       </head>
       <body>
-        <TooltipProvider>{children}</TooltipProvider>
-        <Toaster position="bottom-right" richColors />
+        <ThemeProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster position="bottom-right" richColors />
+        </ThemeProvider>
         <TanStackDevtools
           config={{ position: 'bottom-left' }}
           plugins={[
@@ -69,7 +79,7 @@ function RootLayout() {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-6xl px-4 pt-8 pb-16 sm:px-6">
+      <main className="pb-16">
         <Outlet />
       </main>
     </>
@@ -78,7 +88,7 @@ function RootLayout() {
 
 function NotFound() {
   return (
-    <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-24 text-center">
+    <Container className="flex max-w-md flex-col items-center gap-4 py-24 text-center">
       <span className="grid size-14 place-items-center rounded-full bg-secondary">
         <Compass className="size-6 text-muted-foreground" />
       </span>
@@ -89,6 +99,6 @@ function NotFound() {
       <Button asChild className="rounded-full">
         <Link to="/">Voir tous les voyages</Link>
       </Button>
-    </div>
+    </Container>
   )
 }

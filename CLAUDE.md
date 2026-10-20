@@ -51,7 +51,8 @@ Le projet suit la structure standard recommandée pour **TanStack Start** et **T
 /app
   ├── components/
   │   ├── ui/              # Composants générés par shadcn/ui (ne pas éditer à la main, exclus d'ESLint)
-  │   └── features/        # Composants métier (trip-card, itinerary-timeline, travelers-card...)
+  │   ├── features/        # Composants métier (trip-card, itinerary-timeline, travelers-card...)
+  │   └── layout/          # Structure de page (container : largeur centrée max-w-6xl + gouttières)
   ├── routes/              # Routing basé sur les fichiers (TanStack Router)
   │   ├── __root.tsx       # Document HTML + layout global (header) + session dans le contexte
   │   ├── index.tsx        # Accueil : hero, "Mes voyages", voyages publics filtrables (?q=&tag=)
@@ -71,6 +72,7 @@ Le projet suit la structure standard recommandée pour **TanStack Start** et **T
 
 - Le dossier source est `app/` (`tanstackStart({ srcDirectory: 'app' })` dans `vite.config.ts`).
 - Alias d'import : `@/*` → `app/*`.
+- **Mise en page :** `<main>` ne contraint pas la largeur ; chaque page enveloppe son contenu dans `<Container>` (`@/components/layout/container`), ce qui permet des sections pleine largeur (ex. le hero du globe sur l'accueil).
 - **Données :** stockage en mémoire (`app/server/db.ts`), réinitialisé au redémarrage. **Auth :** cookie de démo non signé (`app/server/auth.ts`) — à remplacer avant production.
 - **Accès :** la lecture des voyages publics est libre ; création/édition/suppression réservées à l'organisateur, programme éditable par les membres, voyages privés visibles des seuls membres (404 sinon). Les contrôles sont faits côté serveur.
 ---

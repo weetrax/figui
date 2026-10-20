@@ -7,8 +7,10 @@ import {
   TripTagBadge,
 } from '@/components/features/trip-badges'
 import { UserAvatar } from '@/components/features/user-avatar'
+import { countryName } from '@/lib/countries'
 import { formatCurrency, formatDateRange } from '@/lib/format'
 import { spotsLeft, travelersCount } from '@/lib/permissions'
+import { cn } from '@/lib/utils'
 import type { Trip } from '@/types'
 
 interface TripCardProps {
@@ -17,30 +19,53 @@ interface TripCardProps {
 
 export const TripCard: React.FC<TripCardProps> = ({ trip }) => {
   const remaining = spotsLeft(trip)
+  // Voyage passé : carte atténuée, couleurs rétablies au survol / focus.
+  const isPast = trip.status === 'Terminé'
 
   return (
     <Link
       to="/trips/$slug"
       params={{ slug: trip.slug }}
-      className="group flex flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+      className={cn(
+        'group flex flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
+        isPast && 'bg-card/60 shadow-none',
+      )}
     >
       <div className="relative aspect-[16/10] overflow-hidden">
         <CoverImage
           src={trip.coverImageUrl}
           alt={trip.title}
-          className="size-full transition duration-500 group-hover:scale-105"
+          className={cn(
+            'size-full transition duration-500 group-hover:scale-105',
+            isPast &&
+              'grayscale-[85%] group-hover:grayscale-0 group-focus-visible:grayscale-0',
+          )}
         />
+        {isPast && (
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-background/45 transition duration-500 group-hover:opacity-0 group-focus-visible:opacity-0"
+          />
+        )}
         <div className="absolute top-3 left-3 flex gap-1.5">
           <TripStatusBadge status={trip.status} />
           {!trip.isPublic && <PrivateBadge />}
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 p-4">
+      <div
+        className={cn(
+          'flex flex-1 flex-col gap-3 p-4 transition',
+          isPast &&
+            'opacity-60 group-hover:opacity-100 group-focus-visible:opacity-100',
+        )}
+      >
         <div>
           <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
             <MapPin className="size-3.5" />
-            {trip.country}
+            <span className="truncate">
+              {trip.countries.map(countryName).join(' · ')}
+            </span>
           </p>
           <h3 className="mt-1 line-clamp-1 text-lg font-bold">{trip.title}</h3>
           <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">

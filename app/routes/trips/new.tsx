@@ -7,6 +7,7 @@ import {
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { TripForm } from '@/components/features/trip-form'
+import { Container } from '@/components/layout/container'
 import { createTrip } from '@/lib/api/trips'
 import type { TripInput } from '@/types'
 
@@ -36,7 +37,7 @@ function NewTripPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <Container className="space-y-6 pt-8">
       <Link
         to="/"
         className="inline-flex items-center gap-2 text-sm font-medium hover:text-primary"
@@ -56,6 +57,6 @@ function NewTripPage() {
         onSubmit={handleSubmit}
         onCancel={() => router.history.back()}
       />
-    </div>
+    </Container>
   )
 }

@@ -29,7 +29,12 @@ export const TripStatusBadge: React.FC<{
 export const PrivateBadge: React.FC<{ className?: string }> = ({
   className,
 }) => (
-  <Badge className={cn('border-0 bg-amber-100 text-amber-900', className)}>
+  <Badge
+    className={cn(
+      'border-0 bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-100',
+      className,
+    )}
+  >
     <Lock />
     Privé
   </Badge>

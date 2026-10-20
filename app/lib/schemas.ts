@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { STEP_TAG_NAMES } from '@/lib/constants'
+import { isCountryCode } from '@/lib/countries'
 
 const isoDate = z
   .string()
@@ -24,7 +25,10 @@ export const tripInputSchema = z
     isDateFlexible: z.boolean(),
     isPublic: z.boolean(),
     tags: z.array(z.string().trim().min(1)).max(8),
-    country: z.string().trim().min(2, 'Indiquez un pays').max(60),
+    countries: z
+      .array(z.string().refine(isCountryCode, 'Code pays ISO inconnu'))
+      .min(1, 'Choisissez au moins un pays')
+      .max(10, '10 pays maximum'),
     estimatedBudget: z.number().min(0, 'Le budget doit être positif'),
     maxTravelers: z
       .number()
